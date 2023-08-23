@@ -1,0 +1,37 @@
+name: run-tests
+on:
+  push:
+  pull_request:
+    branches:
+      - "master"
+  workflow_dispatch:
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.8, 3.9, "3.10", "3.11"]
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Python # Set Python version
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      # Install pip and pytest
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e '.[cli]'
+          pip install pytest pytest-cov
+      - name: Test with pytest
+        run:
+          PYTHONHASHSEED=0 pytest --ignore docs --cov=pyoverleaf ${{ ((matrix.python-version == '3.7') && '--ignore-glob "tests/*_py38_test.py"') || '' }} --cov-report=xml --doctest-modules --junitxml=junit/test-results-${{ matrix.python-version }}.xml
+      # - name: Upload coverage to Codecov
+      #   uses: codecov/codecov-action@v2
+      #   with:
+      #     env_vars: OS
+      #     fail_ci_if_error: true
+      #     files: ./coverage.xml
+      #     flags: python-${{ matrix.python-version }},click-${{ matrix.click-version }}
+      #     verbose: true

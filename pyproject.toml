@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=45", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+write_to = "pyoverleaf/_version.py"
+
+[project]
+name = "pyoverleaf"
+authors = [
+    {name = "Jonas Kulhanek", email = "jonas.kulhanek@live.com"},
+]
+description = "Overleaf API and simple CLI"
+readme = "README.md"
+requires-python = ">=3.8"
+keywords = ["overleaf", "api"]
+license = {text = "MIT"}
+classifiers = [
+    "Programming Language :: Python :: 3",
+]
+dependencies = [
+    "requests",
+    "beautifulsoup4",
+    "browsercookie",
+    "websocket-client",
+]
+dynamic = ["version"]
+
+[project.optional-dependencies]
+cli = ["click"]
+
+[project.scripts]
+pyoverleaf = "pyoverleaf.__main__:main"
