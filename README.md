@@ -9,19 +9,19 @@ Unofficial Python API to access Overleaf.
 - [x] Delete files, create folders
 - [x] Python CLI interface to access project files
 - [ ] Move, rename files
-- [ ] Create, delete, archive, rename projects
+- [ ] Create, delete, archive, and rename projects
 - [ ] Access/update comments, perform live changes
 - [ ] Access/update profile details
 - [ ] Robust login
 
 ## Getting started
-Install the project by running:
+Install the project by running the following:
 ```bash
 pip install 'pyoverleaf[cli]'
 ```
 
-Before using the API, make sure you are logged into overleaf in your default web browser.
-Currently only Google Chrome and Mozila Firefox are supported: https://github.com/richardpenman/browsercookie
+Before using the API, make sure you are logged into Overleaf in your default web browser.
+Currently, only Google Chrome and Mozilla Firefox are supported: https://github.com/richardpenman/browsercookie
 Test if everything is working by listing the projects:
 ```bash
 pyoverleaf ls
@@ -69,7 +69,7 @@ api.project_delete_entity(project_id, new_folder)
 ```
 
 ## Higher-level Python IO API
-The higher-level Python IO API allows users to access the project files in a pythonic way.
+The higher-level Python IO API allows users to access the project files in a Pythonic way.
 The main entrypoint is the class `pyoverleaf.ProjectIO`
 
 Here are some examples on how to use the API:
