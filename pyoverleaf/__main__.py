@@ -34,6 +34,7 @@ def main():
 @click.argument("path", type=str, default=".")
 def list_projects_and_files(path):
     api = Api()
+    api.login_from_browser()
     projects = api.get_projects()
     if not path or path in {".", "/"}:
         print("\n".join(project.name for project in projects))
@@ -61,6 +62,7 @@ def list_projects_and_files(path):
 @click.argument("path", type=str)
 def make_directory(path, parents):
     api = Api()
+    api.login_from_browser()
     io, path = _get_io_and_path(api, path)
     io.mkdir(path, parents=parents, exist_ok=parents)
 
@@ -69,6 +71,7 @@ def make_directory(path, parents):
 @click.argument("path", type=str)
 def read(path):
     api = Api()
+    api.login_from_browser()
     io, path = _get_io_and_path(api, path)
     with io.open(path, "rb") as f:
         shutil.copyfileobj(f, sys.stdout.buffer)
@@ -77,6 +80,7 @@ def read(path):
 @click.argument("path", type=str)
 def write(path):
     api = Api()
+    api.login_from_browser()
     io, path = _get_io_and_path(api, path)
     with io.open(path, "wb+") as f:
         shutil.copyfileobj(sys.stdin.buffer, f)
@@ -85,6 +89,7 @@ def write(path):
 @click.argument("path", type=str)
 def remove(path):
     api = Api()
+    api.login_from_browser()
     io, path = _get_io_and_path(api, path)
     io.remove(path)
 
@@ -93,6 +98,7 @@ def remove(path):
 @click.argument("output_path", type=str)
 def download_project(project, output_path):
     api = Api()
+    api.login_from_browser()
     projects = api.get_projects()
     project_id = None
     for p in projects:

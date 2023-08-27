@@ -37,6 +37,7 @@ The main entrypoint is the class `pyoverleaf.Api`
 import pyoverleaf
 
 api = pyoverleaf.Api()
+api.login_from_browser()
 
 # Lists the projects
 projects = api.get_projects()
@@ -51,6 +52,7 @@ api.download_project(project_id, "project.zip")
 import pyoverleaf
 
 api = pyoverleaf.Api()
+api.login_from_browser()
 # Choose a project
 project_id = projects[0].id
 
@@ -77,6 +79,7 @@ Here are some examples on how to use the API:
 import pyoverleaf
 
 api = pyoverleaf.Api()
+api.login_from_browser()
 # Choose a project
 project_id = projects[0].id
 

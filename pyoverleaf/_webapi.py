@@ -6,7 +6,7 @@ try:
     import http.cookiejar as cookielib
 except ImportError:
     import cookielib  # type: ignore
-from typing import List, Optional, Union, overload, Literal
+from typing import List, Optional, Union, overload, Literal, Dict
 import json
 from dataclasses import dataclass, field
 from websocket import create_connection
@@ -201,6 +201,7 @@ class Api:
         :param parent_folder_id: The id of the parent folder.
         :param folder_name: The name of the folder.
         """
+        self._assert_session_initialized()
         r = self._get_session().post(f"https://www.overleaf.com/project/{project_id}/folder", json={
             "parent_folder_id": parent_folder_id,
             "name": folder_name
@@ -224,6 +225,7 @@ class Api:
         :param file_content: The content of the file.
         """
         mime = "application/octet-stream"
+        self._assert_session_initialized()
         r = self._get_session().post(f"https://www.overleaf.com/project/{project_id}/upload?folder_id={folder_id}",
             files={
                 "relativePath": (None, "null"),
@@ -262,6 +264,7 @@ class Api:
         :param output_path: The path to save the file to. If none, the file will be returned as bytes.
         :return: The file if output_path is None, else None.
         """
+        self._assert_session_initialized()
         if file.type == "file":
             r = self._get_session().get(f"https://www.overleaf.com/project/{project_id}/file/{file.id}", **self._request_kwargs)  # pylint: disable=protected-access
             r.raise_for_status()
@@ -296,6 +299,7 @@ class Api:
             entity = entity.id
         else:
             assert isinstance(entity, str)
+        self._assert_session_initialized()
         r = self._get_session().delete(f"https://www.overleaf.com/project/{project_id}/{entity_type}/{entity}", json={}, **self._request_kwargs, headers={
             "Referer": f"https://www.overleaf.com/project/{project_id}",
             "Accept": "application/json",
@@ -303,6 +307,43 @@ class Api:
             "x-csrf-token": self._get_csrf_token(project_id),
         })
         r.raise_for_status()
+
+    def login_from_browser(self):
+        """
+        Login to Overleaf using the default browser's cookies.
+        """
+        cookies = browsercookie.load()
+        self.login_from_cookies(cookies)
+
+    @overload
+    def login_from_cookies(self, cookies: Dict[str, str]):
+        """
+        Login to Overleaf using a dictionary of cookies.
+        """
+
+    @overload
+    def login_from_cookies(self, cookies: cookielib.CookieJar):
+        """
+        Login to Overleaf using a CookieJar.
+        """
+
+    def login_from_cookies(self, cookies):
+        if not isinstance(cookies, cookielib.CookieJar):
+            assert isinstance(cookies, dict)
+            cookies_jar = cookielib.CookieJar()
+            for name, value in cookies.items():
+                cookies_jar.set_cookie(cookielib.Cookie(
+                    name=name,
+                    value=value,
+                    domain=".overleaf.com"))
+            cookies = cookies_jar
+
+        assert isinstance(cookies, cookielib.CookieJar)
+        self._cookies = cookielib.CookieJar()
+        for cookie in cookies:
+            if cookie.domain.endswith(".overleaf.com"):
+                self._cookies.set_cookie(cookie)
+        self._session_initialized = True
 
     def _pull_doc_project_file_content(self, project_id: str, file_id: str) -> str:
         socket = None
@@ -354,17 +395,11 @@ class Api:
         return http_session
 
     def _assert_session_initialized(self):
-        if self._session_initialized:
-            return
-
-        cookies = browsercookie.load()
-        self._cookies = cookielib.CookieJar()
-        for cookie in cookies:
-            if cookie.domain.endswith(".overleaf.com"):
-                self._cookies.set_cookie(cookie)
-        self._session_initialized = True
+        if not self._session_initialized:
+            raise RuntimeError("Must call api.login_*() before using the api")
 
     def _get_csrf_token(self, project_id):
+        self._assert_session_initialized()
         # First we pull the csrf token
         if self._csrf_cache is not None and self._csrf_cache[0] == project_id:
             return self._csrf_cache[1]
@@ -376,6 +411,7 @@ class Api:
         return token
 
     def _open_socket(self, project_id: str) -> bytes:
+        self._assert_session_initialized()
         time_now = int(time.time() * 1000)
         session = self._get_session()  # pylint: disable=protected-access
         r = session.get(
