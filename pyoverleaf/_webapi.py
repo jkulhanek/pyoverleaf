@@ -120,11 +120,12 @@ class ProjectFolder:
 
 
 class Api:
-    def __init__(self, timeout: int = 16, proxies=None):
+    def __init__(self, *, timeout: int = 16, proxies=None, ssl_verify: bool = True):
         self._session_initialized = False
         self._cookies = None
         self._request_kwargs = { "timeout": timeout }
         self._proxies = proxies
+        self._ssl_verify = ssl_verify
         self._csrf_cache = None
 
     def get_projects(self) -> List[Project]:
@@ -391,7 +392,7 @@ class Api:
         http_session = requests.Session()
         http_session.cookies = self._cookies
         http_session.proxies = self._proxies
-        http_session.verify = False
+        http_session.verify = self._ssl_verify
         return http_session
 
     def _assert_session_initialized(self):
