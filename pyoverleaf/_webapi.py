@@ -128,10 +128,12 @@ class Api:
         self._ssl_verify = ssl_verify
         self._csrf_cache = None
 
-    def get_projects(self) -> List[Project]:
+    def get_projects(self, *, trashed: bool = False, archived: bool = False) -> List[Project]:
         """
         Get the full list of projects.
 
+        :param trashed: Whether to include trashed projects.
+        :param archived: Whether to include archived projects.
         :return: A list of projects.
         """
         self._assert_session_initialized()
@@ -142,7 +144,12 @@ class Api:
         data = json.loads(data)
         projects = []
         for project_data in data["projects"]:
-            projects.append(Project.from_data(project_data))
+            proj = Project.from_data(project_data)
+            if not trashed and proj.trashed:
+                continue
+            if not archived and proj.archived:
+                continue
+            projects.append(proj)
         return projects
 
     @overload
