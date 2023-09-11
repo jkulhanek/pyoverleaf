@@ -340,10 +340,7 @@ class Api:
             assert isinstance(cookies, dict)
             cookies_jar = cookielib.CookieJar()
             for name, value in cookies.items():
-                cookies_jar.set_cookie(cookielib.Cookie(
-                    name=name,
-                    value=value,
-                    domain=".overleaf.com"))
+                cookies_jar.set_cookie(requests.cookies.create_cookie(name, value, domain=".overleaf.com"))
             cookies = cookies_jar
 
         assert isinstance(cookies, cookielib.CookieJar)
