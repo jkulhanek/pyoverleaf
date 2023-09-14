@@ -41,7 +41,7 @@ class Project:
     source: str
     archived: bool
     trashed: bool
-    owner: User
+    owner: Optional[User] = None
     last_updated_by: Optional[User] = None
 
     @classmethod
@@ -54,11 +54,16 @@ class Project:
             source=data["source"],
             archived=data["archived"],
             trashed=data["trashed"],
-            owner=User.from_data(data["owner"]),
         )
 
-        if "lastUpdatedBy" in data:
-            out.last_updated_by = User.from_data(data["lastUpdatedBy"]),
+        owner_data = data.get("owner")
+        if owner_data is not None:
+            out.owner = User.from_data(owner_data)
+
+        last_updated_by_data = data.get("lastUpdatedBy")
+        if last_updated_by_data is not None:
+            out.last_updated_by = User.from_data(last_updated_by_data)
+
         return out
 
 
