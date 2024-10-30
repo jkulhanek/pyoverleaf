@@ -125,13 +125,14 @@ class ProjectFolder:
 
 
 class Api:
-    def __init__(self, *, timeout: int = 16, proxies=None, ssl_verify: bool = True):
+    def __init__(self, *, timeout: int = 16, proxies=None, ssl_verify: bool = True, root_domain: str = "www.overleaf.com"):
         self._session_initialized = False
         self._cookies = None
         self._request_kwargs = { "timeout": timeout }
         self._proxies = proxies
         self._ssl_verify = ssl_verify
         self._csrf_cache = None
+        self._root_domain = root_domain
 
     def get_projects(self, *, trashed: bool = False, archived: bool = False) -> List[Project]:
         """
@@ -142,7 +143,7 @@ class Api:
         :return: A list of projects.
         """
         self._assert_session_initialized()
-        r = self._get_session().get("https://overleaf.com/", **self._request_kwargs)
+        r = self._get_session().get(f"https://{self._root_domain}/", **self._request_kwargs)
         r.raise_for_status()
         content = BeautifulSoup(r.content, features="html.parser")
         data = content.find("meta", dict(name="ol-prefetchedProjectsBlob")).get("content")
@@ -174,7 +175,7 @@ class Api:
         :return: The zipped project if output_path is None, else None.
         """
         self._assert_session_initialized()
-        r = self._get_session().get(f"https://www.overleaf.com/project/{project_id}/download/zip", **self._request_kwargs)
+        r = self._get_session().get(f"https://{self._root_domain}/project/{project_id}/download/zip", **self._request_kwargs)
         r.raise_for_status()
         if output_path is not None:
             with open(output_path, "wb") as f:
@@ -215,11 +216,11 @@ class Api:
         :param folder_name: The name of the folder.
         """
         self._assert_session_initialized()
-        r = self._get_session().post(f"https://www.overleaf.com/project/{project_id}/folder", json={
+        r = self._get_session().post(f"https://{self._root_domain}/project/{project_id}/folder", json={
             "parent_folder_id": parent_folder_id,
             "name": folder_name
         }, **self._request_kwargs, headers={
-            "Referer": f"https://www.overleaf.com/project/{project_id}",
+            "Referer": f"https://{self._root_domain}/project/{project_id}",
             "Accept": "application/json",
             "Cache-Control": "no-cache",
             "x-csrf-token": self._get_csrf_token(project_id),
@@ -239,14 +240,14 @@ class Api:
         """
         mime = "application/octet-stream"
         self._assert_session_initialized()
-        r = self._get_session().post(f"https://www.overleaf.com/project/{project_id}/upload?folder_id={folder_id}",
+        r = self._get_session().post(f"https://{self._root_domain}/project/{project_id}/upload?folder_id={folder_id}",
             files={
                 "relativePath": (None, "null"),
                 "name": (None, file_name),
                 "type": (None, mime),
                 "qqfile": (file_name, file_content, mime),
             }, **self._request_kwargs, headers={
-            "Referer": f"https://www.overleaf.com/project/{project_id}",
+            "Referer": f"https://{self._root_domain}/project/{project_id}",
             "Accept": "application/json",
             "Cache-Control": "no-cache",
             "x-csrf-token": self._get_csrf_token(project_id),
@@ -279,7 +280,7 @@ class Api:
         """
         self._assert_session_initialized()
         if file.type == "file":
-            r = self._get_session().get(f"https://www.overleaf.com/project/{project_id}/file/{file.id}", **self._request_kwargs)  # pylint: disable=protected-access
+            r = self._get_session().get(f"https://{self._root_domain}/project/{project_id}/file/{file.id}", **self._request_kwargs)  # pylint: disable=protected-access
             r.raise_for_status()
             if output_path is not None:
                 with open(output_path, "wb") as f:
@@ -313,8 +314,8 @@ class Api:
         else:
             assert isinstance(entity, str)
         self._assert_session_initialized()
-        r = self._get_session().delete(f"https://www.overleaf.com/project/{project_id}/{entity_type}/{entity}", json={}, **self._request_kwargs, headers={
-            "Referer": f"https://www.overleaf.com/project/{project_id}",
+        r = self._get_session().delete(f"https://{self._root_domain}/project/{project_id}/{entity_type}/{entity}", json={}, **self._request_kwargs, headers={
+            "Referer": f"https://{self._root_domain}/project/{project_id}",
             "Accept": "application/json",
             "Cache-Control": "no-cache",
             "x-csrf-token": self._get_csrf_token(project_id),
@@ -341,17 +342,18 @@ class Api:
         """
 
     def login_from_cookies(self, cookies):
+        dot_domain = f".{self._root_domain.removeprefix('www.')}"
         if not isinstance(cookies, cookielib.CookieJar):
             assert isinstance(cookies, dict)
             cookies_jar = cookielib.CookieJar()
             for name, value in cookies.items():
-                cookies_jar.set_cookie(requests.cookies.create_cookie(name, value, domain=".overleaf.com"))
+                cookies_jar.set_cookie(requests.cookies.create_cookie(name, value, domain=dot_domain))
             cookies = cookies_jar
 
         assert isinstance(cookies, cookielib.CookieJar)
         self._cookies = cookielib.CookieJar()
         for cookie in cookies:
-            if cookie.domain.endswith(".overleaf.com"):
+            if cookie.domain.endswith(dot_domain):
                 self._cookies.set_cookie(cookie)
         self._session_initialized = True
 
@@ -413,7 +415,7 @@ class Api:
         # First we pull the csrf token
         if self._csrf_cache is not None and self._csrf_cache[0] == project_id:
             return self._csrf_cache[1]
-        r = self._get_session().get(f"https://www.overleaf.com/project/{project_id}", **self._request_kwargs)
+        r = self._get_session().get(f"https://{self._root_domain}/project/{project_id}", **self._request_kwargs)
         r.raise_for_status()
         content = BeautifulSoup(r.content, features="html.parser")
         token = content.find("meta", dict(name="ol-csrfToken")).get("content")
@@ -425,15 +427,15 @@ class Api:
         time_now = int(time.time() * 1000)
         session = self._get_session()  # pylint: disable=protected-access
         r = session.get(
-            f"https://www.overleaf.com/socket.io/1/?projectId={project_id}&t={time_now}", **self._request_kwargs)  # pylint: disable=protected-access
+            f"https://{self._root_domain}/socket.io/1/?projectId={project_id}&t={time_now}", **self._request_kwargs)  # pylint: disable=protected-access
         r.raise_for_status()
         content = r.content.decode("utf-8")
         socket_id = content.split(":")[0]
-        socket_url = f"wss://www.overleaf.com/socket.io/1/websocket/{socket_id}?projectId={project_id}"
+        socket_url = f"wss://{self._root_domain}/socket.io/1/websocket/{socket_id}?projectId={project_id}"
         kwargs = {}
         cookies = None
 
-        cookies = "; ".join([f"{c.name}={c.value}" for c in session.cookies if c.domain.endswith(".overleaf.com")])
+        cookies = "; ".join([f"{c.name}={c.value}" for c in session.cookies if c.domain.endswith(f".{self._root_domain}")])
         headers = dict(**session.headers)
         for header, value in headers.items():
             if header.lower() == 'cookie':
