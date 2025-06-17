@@ -33,6 +33,21 @@ class User:
 
 
 @dataclass
+class Tag:
+    id: str
+    name: str
+    color: str
+
+    @classmethod
+    def from_data(cls, data: dict):
+        return cls(
+            id=data["_id"],
+            name=data["name"],
+            color=data["color"],
+        )
+
+
+@dataclass
 class Project:
     id: str
     name: str
@@ -43,6 +58,7 @@ class Project:
     trashed: bool
     owner: Optional[User] = None
     last_updated_by: Optional[User] = None
+    tags: Optional[List[Tag]] = field(default_factory=list)
 
     @classmethod
     def from_data(cls, data: dict):
@@ -155,6 +171,19 @@ class Api:
             if not archived and proj.archived:
                 continue
             projects.append(proj)
+
+        # Add tags to projects
+        tags = content.find("meta", dict(name="ol-tags")).get("content")
+        tags = json.loads(tags)
+        proj_map = {proj.id: proj for proj in projects}
+        for tag_data in tags:
+            tag = Tag.from_data(tag_data)
+            for project_id in tag_data["project_ids"]:
+                if project_id in proj_map:
+                    project = proj_map[project_id]
+                    if not hasattr(project, "tags"):
+                        project.tags = []
+                    project.tags.append(tag)
         return projects
 
     @overload
