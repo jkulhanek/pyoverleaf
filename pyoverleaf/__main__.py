@@ -4,7 +4,7 @@ import click
 from . import Api, ProjectIO
 
 def _host_option(func):
-    return click.option("--host", default="overleaf.com", envvar="OVERLEAF_INSTANCE", help="The domain of the overleaf instance. If not given, the value of env var OVERLEAF_INSTANCE, else default overleaf.com." )(func)
+    return click.option("--host", default="overleaf.com", envvar="PYOVERLEAF_INSTANCE", help="The domain of the overleaf instance. If not given, the value of env var OVERLEAF_INSTANCE, else default overleaf.com." )(func)
 
 def _get_io_and_path(api, path):
     if "/" not in path:
