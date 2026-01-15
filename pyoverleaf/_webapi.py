@@ -371,7 +371,10 @@ class Api:
         """
 
     def login_from_cookies(self, cookies):
-        dot_host = f".{self._host.removeprefix('www.')}"
+        dot_host = self._host
+        if dot_host[:4] == 'www.':
+            dot_host = f".{self._host.removeprefix('www.')}"
+
         if not isinstance(cookies, cookielib.CookieJar):
             assert isinstance(cookies, dict)
             cookies_jar = cookielib.CookieJar()
