@@ -23,6 +23,7 @@ dependencies = [
     "beautifulsoup4",
     "browsercookie",
     "websocket-client",
+    "click",
 ]
 dynamic = ["version"]
 
