@@ -12,7 +12,7 @@ authors = [
 ]
 description = "Overleaf API and simple CLI"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 keywords = ["overleaf", "api"]
 license = "MIT"
 classifiers = [

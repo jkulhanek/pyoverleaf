@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.8, 3.9, "3.10", "3.11"]
+        python-version: [3.9, "3.10", "3.11", "3.12", "3.13", "3.14"]
 
     steps:
       - uses: actions/checkout@v2
@@ -26,7 +26,7 @@ jobs:
           pip install pytest pytest-cov
       - name: Test with pytest
         run:
-          PYTHONHASHSEED=0 pytest --ignore docs --cov=pyoverleaf ${{ ((matrix.python-version == '3.7') && '--ignore-glob "tests/*_py38_test.py"') || '' }} --cov-report=xml --doctest-modules --junitxml=junit/test-results-${{ matrix.python-version }}.xml
+          PYTHONHASHSEED=0 pytest --ignore docs --cov=pyoverleaf --cov-report=xml --doctest-modules --junitxml=junit/test-results-${{ matrix.python-version }}.xml
       # - name: Upload coverage to Codecov
       #   uses: codecov/codecov-action@v2
       #   with:
