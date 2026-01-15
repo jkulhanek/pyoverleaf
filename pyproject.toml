@@ -23,11 +23,9 @@ dependencies = [
     "beautifulsoup4",
     "browsercookie",
     "websocket-client",
+    "click",
 ]
 dynamic = ["version"]
-
-[project.optional-dependencies]
-cli = ["click"]
 
 [project.scripts]
 pyoverleaf = "pyoverleaf.__main__:main"
