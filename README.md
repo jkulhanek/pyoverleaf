@@ -109,11 +109,16 @@ with io.open("path/to/a/new/file", "w+") as f:
 ## Using the CLI
 The CLI provides a way to access Overleaf from the shell.
 To get started, run `pyoverleaf --help` to list available commands and their arguments.
+If you want to access your own Overleaf instance, you may set an environment variable `OVERLEAF_INSTANCE` 
+or specify it in each call appending `--host HOST`.  
 
 ### Listing projects and files
 ```bash
 # Listing projects
 pyoverleaf ls
+
+# Listing projects of your own instance
+pyoverleaf ls --host overleaf.my-host.com
 
 # Listing project files
 pyoverleaf ls project-name
