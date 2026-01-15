@@ -20,7 +20,7 @@ class User:
     id: str
     email: str
     first_name: str
-    last_name: str
+    last_name: Optional[str]
 
     @classmethod
     def from_data(cls, data: dict):
@@ -28,7 +28,7 @@ class User:
             id=data["id"],
             email=data["email"],
             first_name=data["firstName"],
-            last_name=data.get("lastName", ""),
+            last_name=data.get("lastName"),
         )
 
 
@@ -36,14 +36,14 @@ class User:
 class Tag:
     id: str
     name: str
-    color: str
+    color: Optional[str]
 
     @classmethod
     def from_data(cls, data: dict):
         return cls(
             id=data["_id"],
             name=data["name"],
-            color=data["color"],
+            color=data.get("color"),
         )
 
 
