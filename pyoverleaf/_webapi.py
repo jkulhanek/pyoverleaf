@@ -28,7 +28,7 @@ class User:
             id=data["id"],
             email=data["email"],
             first_name=data["firstName"],
-            last_name=data["lastName"],
+            last_name=data.get("lastName", ""),
         )
 
 
