@@ -17,7 +17,7 @@ Unofficial Python API to access Overleaf.
 ## Getting started
 Install the project by running the following:
 ```bash
-pip install 'pyoverleaf[cli]'
+pip install 'pyoverleaf'
 ```
 
 Before using the API, make sure you are logged into Overleaf in your default web browser.
