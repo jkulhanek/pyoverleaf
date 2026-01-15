@@ -3,6 +3,8 @@ import sys
 import click
 from . import Api, ProjectIO
 
+def _host_option(func):
+    return click.option("--host", default="overleaf.com", envvar="OVERLEAF_INSTANCE", help="The domain of the overleaf instance. If not given, the value of env var OVERLEAF_INSTANCE, else default overleaf.com." )(func)
 
 def _get_io_and_path(api, path):
     if "/" not in path:
@@ -32,13 +34,16 @@ def main():
 
 @main.command("ls", help="List projects or files in a project")
 @click.argument("path", type=str, default=".")
-def list_projects_and_files(path):
-    api = Api()
+@_host_option
+def list_projects_and_files(path, host):
+    api = Api(host=host)
     api.login_from_browser()
     projects = api.get_projects()
     if not path or path in {".", "/"}:
+        print("Listing overleaf projects from %s\n" % host)
         print("\n".join(project.name for project in projects))
     else:
+        print("Listing files in project \"%s\" from %s\n" % (path, host))
         if path.startswith("/"):
             path = path[1:]
         project, *path = path.split("/", 1)
@@ -59,9 +64,10 @@ def list_projects_and_files(path):
 
 @main.command("mkdir", help="Create a directory in a project")
 @click.option("-p", "--parents", is_flag=True, help="Create parent directories if they don't exist.")
+@_host_option
 @click.argument("path", type=str)
-def make_directory(path, parents):
-    api = Api()
+def make_directory(path, parents, host):
+    api = Api(host=host)
     api.login_from_browser()
     io, path = _get_io_and_path(api, path)
     io.mkdir(path, parents=parents, exist_ok=parents)
@@ -69,8 +75,9 @@ def make_directory(path, parents):
 
 @main.command("read", help="Reads the file in a project and writes to the standard output")
 @click.argument("path", type=str)
-def read(path):
-    api = Api()
+@_host_option
+def read(path, host):
+    api = Api(host=host)
     api.login_from_browser()
     io, path = _get_io_and_path(api, path)
     with io.open(path, "rb") as f:
@@ -78,8 +85,9 @@ def read(path):
 
 @main.command("write", help="Reads the standard input and writes to the file in a project")
 @click.argument("path", type=str)
-def write(path):
-    api = Api()
+@_host_option
+def write(path, host):
+    api = Api(host=host)
     api.login_from_browser()
     io, path = _get_io_and_path(api, path)
     with io.open(path, "wb+") as f:
@@ -87,8 +95,9 @@ def write(path):
 
 @main.command("rm", help="Remove file or folder from a project")
 @click.argument("path", type=str)
-def remove(path):
-    api = Api()
+@_host_option
+def remove(path, host):
+    api = Api(host=host)
     api.login_from_browser()
     io, path = _get_io_and_path(api, path)
     io.remove(path)
@@ -96,8 +105,9 @@ def remove(path):
 @main.command("download-project", help="Download project as a zip file to the specified path.")
 @click.argument("project", type=str)
 @click.argument("output_path", type=str)
-def download_project(project, output_path):
-    api = Api()
+@_host_option
+def download_project(project, output_path, host):
+    api = Api(host=host)
     api.login_from_browser()
     projects = api.get_projects()
     project_id = None
