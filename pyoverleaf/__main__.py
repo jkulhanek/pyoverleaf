@@ -40,10 +40,8 @@ def list_projects_and_files(path, host):
     api.login_from_browser()
     projects = api.get_projects()
     if not path or path in {".", "/"}:
-        print("Listing overleaf projects from %s\n" % host)
         print("\n".join(project.name for project in projects))
     else:
-        print("Listing files in project \"%s\" from %s\n" % (path, host))
         if path.startswith("/"):
             path = path[1:]
         project, *path = path.split("/", 1)
